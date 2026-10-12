@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.leohearts.telluscompat.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "SubLevelContainerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

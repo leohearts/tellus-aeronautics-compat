@@ -3,21 +3,28 @@ loaderVersion = "[4,)"
 license = "MIT"
 issueTrackerURL = "https://github.com/leohearts/tellus-aeronautics-compat/issues"
 
+[[mixins]]
+config = "tellus_aeronautics_compat.mixins.json"
+
 [[mods]]
 modId = "tellus_aeronautics_compat"
 version = "${version}"
 displayName = "Tellus Aeronautics Compat"
 authors = "leohearts"
 description = '''
-Sable's air pressure curve is tuned for vanilla 384 block tall worlds: pressure halves
-every 173 blocks, so anything that flies loses lift a few hundred blocks up. Tellus worlds
-are orders of magnitude taller, which makes airships and other Sable contraptions useless
-above the foothills.
+Two fixes for running Create Aeronautics (Sable) on a Tellus world.
 
-This mod rebuilds the pressure curve from Tellus' own height mapping (height_offset,
-terrestrial_height_scale, oceanic_height_scale and the experimental height increase) using
-a real atmospheric scale height of 8500 m, and registers it with Sable on server start.
-Dimensions that Tellus does not generate are left untouched.
+Air pressure: Sable's curve is tuned for vanilla 384 block tall worlds, so anything that
+flies loses lift a few hundred blocks up. This rebuilds it from Tellus' own height mapping
+(height_offset, terrestrial_height_scale, oceanic_height_scale and the experimental height
+increase) using a real atmospheric scale height of 8500 m.
+
+Sub-level plots: Sable keeps assembled vehicles in a reserved chunk grid at blocks
+20480000..20740095, outside Tellus' Mercator world (+/-20037508). Tellus' dense packed
+coordinate profile clamps BlockPos X/Z to that range, so every plot block collapses onto
+the world edge and Sable's collisions and physics break; chunks out there also make Tellus'
+chunk generator throw. This moves the grid to blocks 18432000..18694143, which is inside
+the world. Sub-levels saved at the old origin must be assembled again.
 '''
 
 [[dependencies.tellus_aeronautics_compat]]
