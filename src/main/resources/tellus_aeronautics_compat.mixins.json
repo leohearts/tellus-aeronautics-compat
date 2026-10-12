@@ -4,7 +4,8 @@
   "package": "com.leohearts.telluscompat.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "SubLevelContainerMixin"
+    "SubLevelContainerMixin",
+    "BalloonFloodFillMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -1,8 +1,9 @@
 # Tellus Aeronautics Compat
 
-Two fixes for running [Create Aeronautics](https://modrinth.com/mod/create-aeronautics)
-(Sable) on a [Tellus](https://modrinth.com/mod/tellus) world: airships keep their lift, and
-assembled vehicles stop corrupting the server.
+Three fixes for running [Create Aeronautics](https://modrinth.com/mod/create-aeronautics)
+(Sable) on a [Tellus](https://modrinth.com/mod/tellus) world: airships keep their lift,
+assembled vehicles stop corrupting the server, and a hot air balloon that is not airtight
+stops walking off into the world.
 
 ## 1. Air pressure
 
@@ -39,6 +40,20 @@ far from anywhere players build. Both the server and the client are patched, and
 agree, so install it on both sides.
 
 Sub-levels that were saved at the old origin stay there and have to be assembled again.
+
+## 3. Hot air balloon fills
+
+A hot air burner finds its envelope by flooding the air around it. `BalloonBuilder` walks one
+Y level with a breadth first search and recurses on the block above every position it accepts,
+and nothing bounds either the recursion or the search: a burner with no airtight envelope, or
+one whose envelope has a gap, is walked to the top of the world.
+
+On a vanilla world that is a few hundred levels. Tellus' build height is 10448, so the client's
+render thread dies with a `StackOverflowError` while ticking the burner, and a dedicated server
+stalls inside one tick. The mod caps the recursion at 128 levels and each level at a 48 block
+radius around the burner, and aborts the fill when either is reached. A real envelope is a few
+dozen blocks across and tall, so neither cap is reached by a balloon that is actually enclosed;
+one that is not gets logged once and fails to build instead of taking the game down.
 
 ## Requirements
 
