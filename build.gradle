@@ -1,0 +1,62 @@
+plugins {
+    id 'java'
+    // Version comes in through the moddev.repositories plugin in settings.gradle.
+    id 'net.neoforged.moddev'
+}
+
+group = 'com.leohearts'
+version = '1.0.0'
+
+java {
+    toolchain { languageVersion = JavaLanguageVersion.of(21) }
+}
+
+neoForge {
+    version = '21.1.248'
+
+    mods {
+        tellus_aeronautics_compat {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+// Compile time only: both mods are supplied by the instance at runtime. The jars are not
+// vendored, they are pulled from the Modrinth CDN on the first build.
+def compileOnlyLibs = [
+        'sable-neoforge-1.21.1-2.0.5.jar'  : 'https://cdn.modrinth.com/data/T9PomCSv/versions/U678xqle/sable-neoforge-1.21.1-2.0.5.jar',
+        'Tellus-neoforge-1.21.1-0.8.3.jar' : 'https://cdn.modrinth.com/data/tTcL5uOD/versions/ktBVq1PY/Tellus-neoforge-1.21.1-0.8.3.jar',
+]
+
+def libFiles = compileOnlyLibs.keySet().collect { file("libs/$it") }
+
+tasks.register('fetchLibs') {
+    description = 'Fetches the compile time dependency jars from the Modrinth CDN.'
+    outputs.files libFiles
+    doLast {
+        compileOnlyLibs.each { name, url ->
+            def dest = file("libs/$name")
+            if (dest.exists()) {
+                return
+            }
+            logger.lifecycle("Downloading $name")
+            dest.parentFile.mkdirs()
+            dest.withOutputStream { it << new URI(url).toURL().openStream() }
+        }
+    }
+}
+
+dependencies {
+    compileOnly files(libFiles)
+}
+
+tasks.named('compileJava') { dependsOn 'fetchLibs' }
+
+tasks.named('processResources', ProcessResources).configure {
+    inputs.property 'version', project.version
+    filesMatching('META-INF/neoforge.mods.toml') { expand version: project.version }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}

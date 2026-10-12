@@ -1,0 +1,49 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "MIT"
+issueTrackerURL = "https://github.com/leohearts/tellus-aeronautics-compat/issues"
+
+[[mods]]
+modId = "tellus_aeronautics_compat"
+version = "${version}"
+displayName = "Tellus Aeronautics Compat"
+authors = "leohearts"
+description = '''
+Sable's air pressure curve is tuned for vanilla 384 block tall worlds: pressure halves
+every 173 blocks, so anything that flies loses lift a few hundred blocks up. Tellus worlds
+are orders of magnitude taller, which makes airships and other Sable contraptions useless
+above the foothills.
+
+This mod rebuilds the pressure curve from Tellus' own height mapping (height_offset,
+terrestrial_height_scale, oceanic_height_scale and the experimental height increase) using
+a real atmospheric scale height of 8500 m, and registers it with Sable on server start.
+Dimensions that Tellus does not generate are left untouched.
+'''
+
+[[dependencies.tellus_aeronautics_compat]]
+modId = "neoforge"
+type = "required"
+versionRange = "[21.1,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.tellus_aeronautics_compat]]
+modId = "minecraft"
+type = "required"
+versionRange = "[1.21.1,1.22)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.tellus_aeronautics_compat]]
+modId = "sable"
+type = "required"
+versionRange = "[2.0,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.tellus_aeronautics_compat]]
+modId = "tellus"
+type = "required"
+versionRange = "[0.8,)"
+ordering = "AFTER"
+side = "BOTH"

@@ -1,0 +1,12 @@
+pluginManagement {
+    repositories {
+        maven { name = 'NeoForged'; url = 'https://maven.neoforged.net/releases' }
+        gradlePluginPortal()
+    }
+}
+
+plugins {
+    id 'net.neoforged.moddev.repositories' version '2.0.148'
+}
+
+rootProject.name = 'tellus-aeronautics-compat'
