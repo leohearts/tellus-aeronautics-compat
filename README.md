@@ -1,8 +1,12 @@
 # Tellus Aeronautics Compat
 
-Two fixes for running [Create Aeronautics](https://modrinth.com/mod/create-aeronautics)
-(Sable) on a [Tellus](https://modrinth.com/mod/tellus) world: airships keep their lift, and
-assembled vehicles stop corrupting the server.
+Three fixes for running [Create Aeronautics](https://modrinth.com/mod/create-aeronautics)
+(Sable) on a [Tellus](https://modrinth.com/mod/tellus) world: airships keep their lift,
+assembled vehicles stop corrupting the server, and a hot air balloon that is not airtight
+stops walking off into the world.
+
+The conflicts between the two mods that are *not* fixed here, and why, are listed in
+[COMPATIBILITY.md](COMPATIBILITY.md).
 
 ## 1. Air pressure
 
@@ -34,11 +38,33 @@ dense 64 bit layout that clamps X/Z to that same range, and the layout is alread
 onto the world edge, which is what breaks Sable's collisions and physics, and any chunk out
 there makes Tellus' chunk generator throw outright.
 
-This mod moves the grid to plot 9000: blocks **18432000..18694143**, over open Pacific and
-far from anywhere players build. Both the server and the client are patched, and they have to
+This mod moves the grid to plot 9000: blocks **18432000..18694143**, inside the clamp and well
+away from anywhere players build. Both the server and the client are patched, and they have to
 agree, so install it on both sides.
 
-Sub-levels that were saved at the old origin stay there and have to be assembled again.
+Sable reserves that whole square — every chunk in it is answered by Sable's chunk hooks, so
+nothing there generates or loads and a player who travels there sees void. Tellus generates
+terrain over the entire ±20037508 square, so no origin inside the clamp avoids the overlap; the
+default origin did not avoid it either, it sat outside the clamp where Tellus' chunk generator
+throws instead. See [COMPATIBILITY.md](COMPATIBILITY.md) for the measurements.
+
+Sub-levels that were saved before the move come back in the new grid on their own: the saved
+plot slot is stored relative to the origin and the pose is absolute, so their world position is
+untouched and nothing has to be reassembled.
+
+## 3. Hot air balloon fills
+
+A hot air burner finds its envelope by flooding the air around it. `BalloonBuilder` walks one
+Y level with a breadth first search and recurses on the block above every position it accepts,
+and nothing bounds either the recursion or the search: a burner with no airtight envelope, or
+one whose envelope has a gap, is walked to the top of the world.
+
+On a vanilla world that is a few hundred levels. Tellus' build height is 10448, so the client's
+render thread dies with a `StackOverflowError` while ticking the burner, and a dedicated server
+stalls inside one tick. The mod caps the recursion at 128 levels and each level at a 48 block
+radius around the burner, and aborts the fill when either is reached. A real envelope is a few
+dozen blocks across and tall, so neither cap is reached by a balloon that is actually enclosed;
+one that is not gets logged once and fails to build instead of taking the game down.
 
 ## Requirements
 
@@ -68,7 +94,7 @@ constant.
 ./gradlew build
 ```
 
-The two compile-time dependency jars are downloaded from the Modrinth CDN into `libs/` on
+The compile time dependency jars are downloaded from the Modrinth CDN into `libs/` on
 the first build and are not committed to the repository. The output jar lands in
 `build/libs/`.
 

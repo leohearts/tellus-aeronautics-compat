@@ -18,10 +18,16 @@ import org.slf4j.Logger;
  *
  * <p>Moving the grid inside the world fixes both. The grid is 128 plots of 128 chunks, i.e.
  * 262144 blocks across, so the origin has to stay at plot 9655 or below; 9000 puts it at
- * blocks 18432000..18694143, over open Pacific and far from anywhere players build.
+ * blocks 18432000..18694143, which is real Tellus terrain (165.6..167.9E, 83.7..84.6S under
+ * the default Mercator projection, i.e. Antarctica). Sable reserves that whole square: its
+ * chunk hooks answer for every chunk in it, so nothing there ever generates or loads, and a
+ * player who travels there sees void. Tellus generates terrain over the entire +/-20037508
+ * square, so no origin inside the clamp avoids that; the previous origin did not either, it
+ * was simply outside the clamp, where Tellus' generator throws for the chunks instead.
  *
- * <p>This only changes where new sub-levels are allocated. Sub-levels that were saved at the
- * old origin stay there and have to be assembled again.
+ * <p>This only changes where sub-levels are allocated. The saved slot is origin relative and
+ * the pose is absolute, so sub-levels that were saved at the old origin come back in the new
+ * grid without being reassembled.
  */
 public final class SablePlotSpace {
 

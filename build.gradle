@@ -28,11 +28,17 @@ def compileOnlyLibs = [
         'Tellus-neoforge-1.21.1-0.8.3.jar' : 'https://cdn.modrinth.com/data/tTcL5uOD/versions/ktBVq1PY/Tellus-neoforge-1.21.1-0.8.3.jar',
 ]
 
+// Create Aeronautics ships as a JarJar bundle; the classes we mix into live in the nested jar,
+// so that one has to be pulled out before it can be compiled against.
+def aeroBundle = 'create-aeronautics-bundled-1.21.1-1.3.2.jar'
+def aeroBundleUrl = 'https://cdn.modrinth.com/data/oWaK0Q19/versions/44pLdPGg/create-aeronautics-bundled-1.21.1-1.3.2.jar'
+def aeroInner = file('libs/aeronautics-neoforge-1.21.1-1.3.2.jar')
+
 def libFiles = compileOnlyLibs.keySet().collect { file("libs/$it") }
 
 tasks.register('fetchLibs') {
     description = 'Fetches the compile time dependency jars from the Modrinth CDN.'
-    outputs.files libFiles
+    outputs.files libFiles + aeroInner
     doLast {
         compileOnlyLibs.each { name, url ->
             def dest = file("libs/$name")
@@ -43,11 +49,29 @@ tasks.register('fetchLibs') {
             dest.parentFile.mkdirs()
             dest.withOutputStream { it << new URI(url).toURL().openStream() }
         }
+        if (!aeroInner.exists()) {
+            logger.lifecycle("Downloading $aeroBundle")
+            def tmp = File.createTempFile('aeronautics', '.jar')
+            try {
+                tmp.withOutputStream { it << new URI(aeroBundleUrl).toURL().openStream() }
+                new java.util.zip.ZipFile(tmp).withCloseable { zip ->
+                    def entry = zip.entries().find { it.name.startsWith('META-INF/jarjar/dev.eriksonn.aeronautics') }
+                    if (entry == null) {
+                        throw new GradleException("no nested aeronautics jar inside $aeroBundle")
+                    }
+                    aeroInner.parentFile.mkdirs()
+                    aeroInner.withOutputStream { out -> zip.getInputStream(entry).transferTo(out) }
+                }
+            } finally {
+                tmp.delete()
+            }
+        }
     }
 }
 
 dependencies {
     compileOnly files(libFiles)
+    compileOnly files(aeroInner)
 }
 
 tasks.named('compileJava') { dependsOn 'fetchLibs' }
